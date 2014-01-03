@@ -2,7 +2,7 @@
 #Symlink to $HOME/bin or 
 # /usr/local/lib/brlib.sh and use with ". /usr/local/lib/brlib.sh"
 # Command line switch -BRDEBUG will set BRDEBUG=1
-#Last modified: 2014-01-03 17:29
+#Last modified: 2014-01-03 17:32
 if [ -z "${brVersion-}" ]; then
 brVersion="1.0"
 
@@ -156,7 +156,7 @@ function brRequire()
     BRERRORABORT=$sbre
 }
 
-# check if a file exists, abort with error message if not
+# check if a file exists and run it, abort with error message if not
 function brRunFile()
 {
     [ -e "$1" ] || brError Running file $1 failed: not found
