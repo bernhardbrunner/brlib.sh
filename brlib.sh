@@ -2,7 +2,7 @@
 #Symlink to $HOME/bin or 
 # /usr/local/lib/brlib.sh and use with ". /usr/local/lib/brlib.sh"
 # Command line switch -BRDEBUG will set BRDEBUG=1
-#Last modified: 2014-01-03 14:24
+#Last modified: 2014-01-03 17:29
 if [ -z "${brVersion-}" ]; then
 brVersion="1.0"
 
@@ -174,8 +174,8 @@ function brCenterpad()
 }
 
 fi
-#brversion
 
+# if first argument on command line is -BRDEBUG, enable debug mode
 if [ "$1" == "-BRDEBUG" ] ; then
     BRDEBUG=1
     shift
