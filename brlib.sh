@@ -3,7 +3,7 @@
 #Symlink to $HOME/bin or 
 # /usr/local/lib/brlib.sh and use with "source /usr/local/lib/brlib.sh"
 # Command line switch -BRDBG will set BRDEBUG=1
-#Last modified: 2020-05-28 08:07
+#Last modified: 2020-05-28 08:19
 #if [ ! -z "${brVersion-}" ]; then
 #    return 0
 #fi
@@ -646,14 +646,9 @@ function brFileSize()
 #check if program is available
 function brIsRunnable()
 {
-    which $1 > /dev/null && return 0
-    return 1
-}
-
-#check if file exists or raise error
-function brAssertReadable
-{
-    [ -r "$1" ] || brError "File $1 is not readable"
+#    [ -x $1 ] && return 0
+        which $1 > /dev/null && return 0
+        return 1
 }
 
 #check if file exists or raise error
@@ -724,9 +719,9 @@ function brSudoWrite()
 function brCenterpad
 
 {
-    local LEN=$ansiColumns
-    let topad=($LEN-${#1})/2
-    let topadd=($LEN-${#1}-${topad})
+#    local LEN=$ansiColumns
+    let topad=$(( ($LEN-${#1})/2 ))
+    let topadd=$(( $LEN-${#1}-${topad} ))
 
     local charmap=$(locale charmap)
 
@@ -772,7 +767,7 @@ function brYesNo
     fi
     while true; do
         # Ask the question
-        printf "$* [$prompt]? "  
+        printf "%s [%s]? " "$*" "$prompt"
         read -n 1 -r
         # Default?
         if [ -z "$REPLY" ]; then
@@ -783,7 +778,7 @@ function brYesNo
             Y*|y*|J*|j*) echo ; return 0 ;;
             N*|n*) echo ; return 1 ;;
         esac
-        echo ?
+        echo "?"
     done    
     #    local REPLY="?"
     #    local default="?"
@@ -824,7 +819,7 @@ function brParseYaml() {
 local prefix=$2
 local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
 sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
-    -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+    -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  "$1" |
 awk -F$fs '{
 indent = length($1)/2;
 vname[indent] = $2;
@@ -840,7 +835,7 @@ for (i in vname) {if (i > indent) {delete vname[i]}}
 brScriptFile="$0"
 [ -x realpath ] && brScriptFile=`realpath $0`
 
-if [ "${1-}" == "-BRDBG" -o  "${1-}" == "-BRDEBUG" -o "$BRDEBUG" == "1" ] ; then
+if [ "${1-}" == "-BRDBG" ] || [ "${1-}" == "-BRDEBUG" ] || [ "$BRDEBUG" == "1" ] ; then
     BRDEBUG=1
     brDebug "Debug mode enabled"
     brIfDebug=brDebug
