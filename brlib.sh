@@ -1,8 +1,9 @@
+#!/bin/bash
 #Bernhard Brunners bash scripting utility library. 
 #Symlink to $HOME/bin or 
 # /usr/local/lib/brlib.sh and use with "source /usr/local/lib/brlib.sh"
 # Command line switch -BRDBG will set BRDEBUG=1
-#Last modified: 2019-04-05 07:50
+#Last modified: 2020-05-28 08:07
 #if [ ! -z "${brVersion-}" ]; then
 #    return 0
 #fi
@@ -50,7 +51,6 @@ else
 fi
 
 # default values
-BRDEBUG=0
 BRERRORCOUNT=0
 BRERRORABORT=1
 
@@ -244,6 +244,7 @@ function brOutputHook()
 
 # display error and exit
 brLogFile=${brLogFile:-}
+brLogging=0
 function brLog()
 {
     if [ "$brLogFile" == "" ] ; then
@@ -261,6 +262,7 @@ function brStatusOut()
 
     #    echo "cols=$(tput cols) #1=${#1} #2=${#2} fill=$col"
     printf '%s%*s%s%s%s\n' "$1" "$col" "$3" "$2" "$ansinormal" 1>&2 
+    [ $brLogging != 0 ] && brLog "$1"
 }
 
 function brFnLn()
@@ -345,7 +347,7 @@ function brTrapsOn()
 
 function brTrapsOff()
 {
-    if [ ! z "$BRACTIVETRAPS" ] ; then
+    if [ ! -z "$BRACTIVETRAPS" ] ; then
         set +e
         trap - $BRACTIVETRAP
         BRACTIVETRAPS=""
@@ -595,6 +597,11 @@ function brListCommands
 } ' < $1
 }
 
+function brFullFilePath
+{
+    echo $(cd $(dirname "$1") && pwd -P)/$(basename "$1")
+}
+
 ##! get file extension
 function brFileExtension
 {
@@ -639,9 +646,20 @@ function brFileSize()
 #check if program is available
 function brIsRunnable()
 {
-#    [ -x $1 ] && return 0
-        which $1 > /dev/null && return 0
-        return 1
+    which $1 > /dev/null && return 0
+    return 1
+}
+
+#check if file exists or raise error
+function brAssertReadable
+{
+    [ -r "$1" ] || brError "File $1 is not readable"
+}
+
+#check if file exists or raise error
+function brAssertFile()
+{
+    [ -e "$1" ] || brError "File $1 does not exist"
 }
 
 ##! check for programs required by a script
@@ -703,9 +721,10 @@ function brSudoWrite()
 ############ FORMATTED OUTPUT #################3
 
 ##! center text and pad it 
-function brCenterpad()
+function brCenterpad
+
 {
-    local LEN=$(ansiColumns)
+    local LEN=$ansiColumns
     let topad=($LEN-${#1})/2
     let topadd=($LEN-${#1}-${topad})
 
@@ -721,7 +740,7 @@ function brCenterpad()
         local ldoff=""
     fi
 
-    pad=`printf '%0.1s' "$dash"{1..200}`
+    pad=$(printf '%0.1s' "$dash"{1..200})
     echo -e "${ansibold}${ldon}${pad:1:$topad}$ldoff$*${ldon}${pad:1:$topadd}${ldoff}${ansinormal}"
 }
 
@@ -729,7 +748,7 @@ function brCenterpad()
 function brPressAnyKey
 {
     local prompt="${ansibold}Press any key to continue${ansinormal}"
-    printf "$prompt"
+    printf "%s" "$prompt"
     read -n 1 -r
     echo
 }
@@ -821,10 +840,14 @@ for (i in vname) {if (i > indent) {delete vname[i]}}
 brScriptFile="$0"
 [ -x realpath ] && brScriptFile=`realpath $0`
 
-if [ "${1-}" == "-BRDBG" -o  "${1-}" == "-BRDEBUG" ] ; then
+if [ "${1-}" == "-BRDBG" -o  "${1-}" == "-BRDEBUG" -o "$BRDEBUG" == "1" ] ; then
     BRDEBUG=1
     brDebug "Debug mode enabled"
+    brIfDebug=brDebug
     shift
+else
+    BRDEBUG=0
+    brIfDebug="BRDEBUG=0 "
 fi
 
 #[ -e $HOME/.config/Xdbus ] && source $HOME/.config/Xdbus
